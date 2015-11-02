@@ -1,0 +1,29 @@
+{
+  "name": "react-fetcher",
+  "version": "0.0.0",
+  "description": "Simple universal data fetching library for React",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "babel-istanbul cover _mocha && babel-istanbul check-coverage --branches 100",
+    "build": "rm -rf lib/ && ./node_modules/.bin/babel -d lib/ src/",
+    "prepublish": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/markdalgleish/react-fetcher.git"
+  },
+  "author": "Mark Dalgleish",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/markdalgleish/react-fetcher/issues"
+  },
+  "homepage": "https://github.com/markdalgleish/react-fetcher#readme",
+  "devDependencies": {
+    "babel": "^5.8.23",
+    "babel-istanbul": "^0.3.20",
+    "chai": "^3.3.0",
+    "mocha": "^2.3.3",
+    "react": "^0.14.1",
+    "sinon": "^1.17.1"
+  }
+}
