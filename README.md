@@ -1,3 +1,5 @@
+[![Build Status](https://img.shields.io/travis/markdalgleish/react-fetcher/master.svg?style=flat-square)](http://travis-ci.org/markdalgleish/react-fetcher) [![npm](https://img.shields.io/npm/v/react-fetcher.svg?style=flat-square)](https://www.npmjs.com/package/react-fetcher)
+
 # react-fetcher
 
 Simple universal data fetching library for React.
