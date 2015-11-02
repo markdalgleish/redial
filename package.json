@@ -1,6 +1,6 @@
 {
   "name": "react-fetcher",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Simple universal data fetching library for React",
   "main": "lib/index.js",
   "scripts": {
