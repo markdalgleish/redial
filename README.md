@@ -51,39 +51,59 @@ For example:
 
 ```js
 import { getPrefetchedData } from 'react-fetcher';
-import { match } from 'react-router';
-import { createStore, applyMiddleware } from 'redux';
-import thunk from 'redux-thunk';
+import React from 'react';
+import { renderToString } from 'react-dom/server';
 import createMemoryHistory from 'history/lib/createMemoryHistory';
 import useQueries from 'history/lib/useQueries';
+import { RoutingContext, match } from 'react-router';
+import { createStore, applyMiddleware } from 'redux';
+import { Provider } from 'react-redux';
+import thunk from 'redux-thunk';
+
+// Your app's reducer and routes:
 import reducer from './reducer';
 import routes from './routes';
 
-// Set up Redux:
-const createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
-const store = createStoreWithMiddleware(reducer);
-const { dispatch } = store;
+// Render the app server-side for a given path:
+export default path => new Promise((resolve, reject) => {
+  // Set up Redux:
+  const createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
+  const store = createStoreWithMiddleware(reducer);
+  const { dispatch } = store;
 
-// Set up history for router:
-const history = useQueries(createMemoryHistory)();
-const location = history.createLocation(path);
+  // Set up history for router:
+  const history = useQueries(createMemoryHistory)();
+  const location = history.createLocation(path);
 
-// Match routes based on location object:
-match({ routes, location }, (routerError, redirectLocation, renderProps) => {
-  const components = renderProps.routes.map(route => route.component);
+  // Match routes based on location object:
+  match({ routes, location }, (routerError, redirectLocation, renderProps) => {
+    // Get array of route components:
+    const components = renderProps.routes.map(route => route.component);
 
-  // Define locals to be provided to all fetcher functions:
-  const locals = {
-    path: renderProps.location.pathname,
-    query: renderProps.location.query,
-    params: renderProps.params,
+    // Define locals to be provided to all fetcher functions:
+    const locals = {
+      path: renderProps.location.pathname,
+      query: renderProps.location.query,
+      params: renderProps.params,
 
-    // Allow fetcher functions to dispatch Redux actions:
-    dispatch
-  };
+      // Allow fetcher functions to dispatch Redux actions:
+      dispatch
+    };
 
-  // Wait for async actions to complete, then render:
-  getPrefetchedData(components, locals).then(render());
+    // Wait for async actions to complete, then render:
+    getPrefetchedData(components, locals)
+      .then(() => {
+        const data = store.getState();
+        const html = renderToString(
+          <Provider store={store}>
+            <RoutingContext {...renderProps} />
+          </Provider>
+        );
+
+        resolve({ data, html });
+      })
+      .catch(reject);
+  });
 });
 ```
 
