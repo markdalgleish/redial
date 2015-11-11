@@ -41,48 +41,49 @@ getPrefetchedData(components, { ... }).then(render());
 getDeferredData(components, { ... }).then(render());
 ```
 
-## Usage with Flux
-
-In order to dispatch actions from within your decorators, you'll want to pass in a reference to your `dispatch` function:
-
-As an example, when using [Redux](https://github.com/rackt/redux):
-
-```js
-import { getPrefetchedData } from 'react-fetcher';
-import { createStore } from 'redux';
-import reducer from './reducer';
-
-const store = createStore(reducer);
-const { dispatch } = store;
-
-getPrefetchedData({ dispatch }).then(render());
-```
-
-## Usage with React Router
+## Example Usage with React Router and Redux
 
 When [server rendering with React Router](https://github.com/rackt/react-router/blob/master/docs/guides/advanced/ServerRendering.md) (or using the same technique to render on the client), the `renderProps` object provided to the `match` callback has an array of routes, each of which has a component attached. You're also likely to want to pass some information from the router to your decorator functions.
+
+In order to dispatch actions from within your decorators, you'll want to pass in a reference to your store's `dispatch` function. This works especially well with [redux-thunk](https://github.com/gaearon/redux-thunk) to ensure your async actions return promises.
 
 For example:
 
 ```js
 import { getPrefetchedData } from 'react-fetcher';
 import { match } from 'react-router';
+import { createStore, applyMiddleware } from 'redux';
+import thunk from 'redux-thunk';
+import createMemoryHistory from 'history/lib/createMemoryHistory';
+import useQueries from 'history/lib/useQueries';
 import reducer from './reducer';
+import routes from './routes';
 
-const store = createStore(reducer);
+// Set up Redux:
+const createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
+const store = createStoreWithMiddleware(reducer);
 const { dispatch } = store;
 
+// Set up history for router:
+const history = useQueries(createMemoryHistory)();
+const location = history.createLocation(path);
+
+// Match routes based on location object:
 match({ routes, location }, (routerError, redirectLocation, renderProps) => {
   const components = renderProps.routes.map(route => route.component);
 
-  const fetcherData = {
+  // Define locals to be provided to all fetcher functions:
+  const locals = {
     path: renderProps.location.pathname,
     query: renderProps.location.query,
     params: renderProps.params,
+
+    // Allow fetcher functions to dispatch Redux actions:
     dispatch
   };
 
-  getPrefetchedData(components, fetcherData).then(render());
+  // Wait for async actions to complete, then render:
+  getPrefetchedData(components, locals).then(render());
 });
 ```
 
