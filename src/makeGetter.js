@@ -1,5 +1,5 @@
 export default ({ name }) => (components, locals) => {
-  const promises = components
+  const promises = (Array.isArray(components) ? components : [components])
 
     // Get component fetchers
     .map(component => component[name])

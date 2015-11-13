@@ -29,7 +29,7 @@ class MyComponent extends Component {
 }
 ```
 
-Once you've decorated your components, you can then asynchronously fetch data for an arbitrary array of components.
+Once you've decorated your components, you can then asynchronously fetch data for an arbitrary array of components, or even a single component if required.
 
 ```js
 import { getPrefetchedData, getDeferredData } from 'react-fetcher';

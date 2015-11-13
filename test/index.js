@@ -82,6 +82,37 @@ describe('Given a series of components have been decorated with prefetchers', ()
 
   });
 
+  describe('When the prefetched data is requested for a single component', () => {
+
+    let resolveSpy, rejectSpy;
+
+    beforeEach(() => {
+      resolveSpy = spy();
+      rejectSpy = spy();
+      getPrefetchedData(prefetch_a.component, { some: 'data' })
+        .then(resolveSpy, rejectSpy);
+    });
+
+    it('Then the prefetcher should have locals passed to it', () => {
+      assert.deepEqual(prefetch_a.stub.getCall(0).args[0], { some: 'data' });
+    });
+
+    describe('And the prefetcher promise is resolved', () => {
+
+      beforeEach(done => {
+        prefetch_a.resolve();
+        setImmediate(done);
+      });
+
+      it('Then the prefetch data promise should also be resolved', () => {
+        assert.equal(resolveSpy.callCount, 1);
+        assert.equal(rejectSpy.callCount, 0);
+      });
+
+    });
+
+  });
+
 });
 
 describe('Given a series of components have been decorated with deferred fetchers', () => {
