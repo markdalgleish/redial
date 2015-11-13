@@ -173,3 +173,47 @@ describe('Given a series of components have been decorated with deferred fetcher
   });
 
 });
+
+describe('Given a component without any decorators applied', () => {
+
+  let component, callbackSpy;
+
+  beforeEach(() => {
+    component = class MyComponent extends Component {
+      render() { return <div />; }
+    };
+  });
+
+  describe('When prefetched data is attempted to be fetched for the component', () => {
+
+    beforeEach(done => {
+      callbackSpy = spy();
+
+      getPrefetchedData(component, { some: 'data' }).then(callbackSpy);
+
+      setImmediate(done);
+    });
+
+    it('Then the promise should still be resolved', () => {
+      assert.equal(callbackSpy.callCount, 1);
+    });
+
+  });
+
+  describe('When deferred data is attempted to be fetched for the component', () => {
+
+    beforeEach(done => {
+      callbackSpy = spy();
+
+      getDeferredData(component, { some: 'data' }).then(callbackSpy);
+
+      setImmediate(done);
+    });
+
+    it('Then the promise should still be resolved', () => {
+      assert.equal(callbackSpy.callCount, 1);
+    });
+
+  });
+
+});
