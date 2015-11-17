@@ -20,8 +20,14 @@ The `@prefetch` decorator is for universal data, while `@defer` is for data that
 import React, { Component } from 'react';
 import { prefetch, defer } from 'react-fetcher';
 
-@prefetch(({ dispatch }) => dispatch({ type: 'GET_PREFETCHED_DATA' })
-@defer(({ dispatch }) => dispatch({ type: 'GET_DEFERRED_DATA' })
+// Your action creators:
+import {
+  getSomething,
+  getSomethingElse
+} from 'actions/things';
+
+@prefetch(({ dispatch, params: { id } }) => dispatch(getSomething(id))
+@defer(({ dispatch, params: { id } }) => dispatch(getSomethingElse(id))
 class MyComponent extends Component {
   render() {
     return <div>...</div>;
