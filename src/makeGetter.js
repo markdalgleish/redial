@@ -1,14 +1,17 @@
 export default ({ name }) => (components, locals) => {
   const promises = (Array.isArray(components) ? components : [components])
 
-    // Get component fetchers
-    .map(component => component[name])
+    // Get component fetcher functions
+    .map(component => ({ component, fetcher: component[name] }))
 
-    // Filter out missing fetchers
-    .filter(fetchers => fetchers)
+    // Filter out components that haven't been decorated
+    .filter(({ fetcher }) => fetcher)
 
-    // Execute fetchers and store promises
-    .map(fetcher => fetcher(locals));
+    // Calculate locals if required, execute fetchers and store promises
+    .map(({ component, fetcher }) => typeof locals === 'function' ?
+      fetcher(locals(component)) :
+      fetcher(locals)
+    );
 
   return Promise.all(promises);
 };

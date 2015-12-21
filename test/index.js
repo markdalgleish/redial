@@ -17,7 +17,7 @@ const makeTestObject = ({ decorator }) => {
 
   @otherDecorator(() => Promise.resolve())
   @decorator(object.stub)
-  class TestComponent extends Component{
+  class TestComponent extends Component {
     render() { return <div />; }
   }
 
@@ -78,6 +78,26 @@ describe('Given a series of components have been decorated with prefetchers', ()
         assert.equal(rejectSpy.callCount, 1);
       });
 
+    });
+
+  });
+
+  describe('When the prefetched data is requested with a locals function', () => {
+
+    let resolveSpy, rejectSpy;
+
+    beforeEach(() => {
+      resolveSpy = spy();
+      rejectSpy = spy();
+      let callCount = 0;
+      const getLocals = component => ({ component, callCount: ++callCount });
+      getPrefetchedData([ prefetch_a.component, prefetch_b.component ], getLocals)
+        .then(resolveSpy, rejectSpy);
+    });
+
+    it('Then the prefetchers should have the correct locals passed to them', () => {
+      assert.deepEqual(prefetch_a.stub.getCall(0).args[0], { component: prefetch_a.component, callCount: 1 });
+      assert.deepEqual(prefetch_b.stub.getCall(0).args[0], { component: prefetch_b.component, callCount: 2 });
     });
 
   });

@@ -35,6 +35,8 @@ class MyComponent extends Component {
 }
 ```
 
+### Fetching data
+
 Once you've decorated your components, you can then asynchronously fetch data for an arbitrary array of components, or even a single component if required.
 
 ```js
@@ -45,6 +47,20 @@ getPrefetchedData(components, { ... }).then(render());
 
 // On client only:
 getDeferredData(components, { ... }).then(render());
+```
+
+### Dynamic locals
+
+If you need to calculate different locals for each fetcher function, you can provide a function instead of an object. This function is then executed once per decorator, with a static reference to the component provided as an argument.
+
+For example, this would allow you to calculate whether a component is being rendered for the first time and pass the result in via the locals object:
+
+```js
+const getLocals = component => ({
+  isFirstRender: prevComponents.indexOf(component) === -1
+});
+
+getPrefetchedData(components, getLocals).then(render());
 ```
 
 ## Example Usage with React Router and Redux
