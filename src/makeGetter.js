@@ -2,7 +2,7 @@ export default ({ name }) => (components, locals) => {
   const promises = (Array.isArray(components) ? components : [components])
 
     // Get component fetcher functions
-    .map(component => ({ component, fetcher: component[name] }))
+    .map(component => (component && { component, fetcher: component[name] }))
 
     // Filter out components that haven't been decorated
     .filter(({ fetcher }) => fetcher)
