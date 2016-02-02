@@ -1,7 +1,7 @@
 {
-  "name": "react-fetcher",
+  "name": "redial",
   "version": "0.3.0",
-  "description": "Simple universal data fetching library for React",
+  "description": "Universal data fetching and route lifecycle management for React etc.",
   "main": "lib/index.js",
   "scripts": {
     "test": "babel-istanbul cover _mocha && babel-istanbul check-coverage --branches 100",
@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/markdalgleish/react-fetcher.git"
+    "url": "git+https://github.com/markdalgleish/redial.git"
   },
   "author": "Mark Dalgleish",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/markdalgleish/react-fetcher/issues"
+    "url": "https://github.com/markdalgleish/redial/issues"
   },
-  "homepage": "https://github.com/markdalgleish/react-fetcher#readme",
+  "homepage": "https://github.com/markdalgleish/redial#readme",
   "devDependencies": {
     "babel": "^5.8.23",
     "babel-istanbul": "^0.3.20",

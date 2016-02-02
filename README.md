@@ -1,57 +1,85 @@
-[![Build Status](https://img.shields.io/travis/markdalgleish/react-fetcher/master.svg?style=flat-square)](http://travis-ci.org/markdalgleish/react-fetcher) [![Coverage Status](https://img.shields.io/coveralls/markdalgleish/react-fetcher/master.svg?style=flat-square)](https://coveralls.io/r/markdalgleish/react-fetcher) [![npm](https://img.shields.io/npm/v/react-fetcher.svg?style=flat-square)](https://www.npmjs.com/package/react-fetcher)
+[![Build Status](https://img.shields.io/travis/markdalgleish/react-fetcher/master.svg?style=flat-square)](http://travis-ci.org/markdalgleish/react-fetcher) [![Coverage Status](https://img.shields.io/coveralls/markdalgleish/react-fetcher/master.svg?style=flat-square)](https://coveralls.io/r/markdalgleish/react-fetcher) [![npm](https://img.shields.io/npm/v/redial.svg?style=flat-square)](https://www.npmjs.com/package/redial)
 
-# react-fetcher
+# redial
 
-Simple universal data fetching library for React.
+Universal data fetching and route lifecycle management for React etc.
 
 ```bash
-$ npm install --save react-fetcher
+$ npm install --save redial
 ```
 
 ## Why?
 
-When using something like [React Router](https://github.com/rackt/react-router), you'll want to ensure that all data for a set of routes is prefetched on the server before attempting to render. You also might want to defer certain data fetching operations to the client, particularly in the interest of server-side performance.
+When using something like [React Router](https://github.com/rackt/react-router), you'll want to ensure that all data for a set of routes is prefetched on the server before attempting to render.
 
-## API
+However, as your application grows, you're likely to discover the need for more advanced route lifecycle management.
 
-The `@prefetch` decorator is for universal data, while `@defer` is for data that is only required on the client. They each accept a function that returns a promise.
+For example, you might want to separate mandatory data dependencies from those that are allowed to fail. You might want to defer certain data fetching operations to the client, particularly in the interest of server-side performance. You might also want to dispatch page load events once all data fetching has completed on the client.
+
+In order to accommodate these scenarios, the ability to define and trigger your own custom route-level lifecycle hooks becomes incredibly important.
+
+## Providing lifecycle hooks
+
+The `@provideHooks` decorator allows you to define hooks for your custom lifecycle events, returning promises if any asynchronous operations need to be performed. When using something like React Router, you'll want to decorate your route handlers rather than lower level components.
+
+For example:
 
 ```js
+import { provideHooks } from 'redial';
+
 import React, { Component } from 'react';
-import { prefetch, defer } from 'react-fetcher';
+import { getSomething, getSomethingElse, trackDone } from 'actions/things';
 
-// Your action creators:
-import {
-  getSomething,
-  getSomethingElse
-} from 'actions/things';
-
-@prefetch(({ dispatch, params: { id } }) => dispatch(getSomething(id))
-@defer(({ dispatch, params: { id } }) => dispatch(getSomethingElse(id))
-class MyComponent extends Component {
+@provideHooks({
+  fetch: ({ dispatch, params: { id } }) => dispatch(getSomething(id)),
+  defer: ({ dispatch, params: { id } }) => dispatch(getSomethingElse(id)),
+  done: ({ dispatch }) => dispatch(trackDone())
+})
+class MyRouteHandler extends Component {
   render() {
     return <div>...</div>;
   }
 }
 ```
 
-### Fetching data
-
-Once you've decorated your components, you can then asynchronously fetch data for an arbitrary array of components, or even a single component if required.
+If you'd prefer to avoid using decorators, you can use `provideHooks` as a plain old function:
 
 ```js
-import { getPrefetchedData, getDeferredData } from 'react-fetcher';
+const hooks = {
+  fetch: ({ dispatch, params: { id } }) => dispatch(getSomething(id)),
+  defer: ({ dispatch, params: { id } }) => dispatch(getSomethingElse(id)),
+  done: ({ dispatch }) => dispatch(trackDone())
+};
 
-// On server and client:
-getPrefetchedData(components, { ... }).then(render());
+class MyRouteHandler extends Component {
+  render() {
+    return <div>...</div>;
+  }
+}
 
-// On client only:
-getDeferredData(components, { ... }).then(render());
+export default provideHooks(hooks)(MyRouteHandler);
+```
+
+### Triggering lifecycle events
+
+Once you've decorated your components, you can then use the `trigger` function to initiate an event for an arbitrary array of components, or even a single component if required. Since hooks tend to be asynchronous, this operation always returns a promise.
+
+For example, when fetching data before rendering on the server:
+
+```js
+import { trigger } from 'redial';
+
+const locals = {
+  some: 'data',
+  more: 'stuff'
+};
+
+trigger('fetch', components, locals).then(render);
 ```
 
 ### Dynamic locals
 
-If you need to calculate different locals for each fetcher function, you can provide a function instead of an object. This function is then executed once per decorator, with a static reference to the component provided as an argument.
+If you need to calculate different locals for each lifecycle hook, you can provide a function instead of an object. This function is then executed once per decorator, with a static reference to the component provided as an argument.
 
 For example, this would allow you to calculate whether a component is being rendered for the first time and pass the result in via the locals object:
 
@@ -60,7 +88,7 @@ const getLocals = component => ({
   isFirstRender: prevComponents.indexOf(component) === -1
 });
 
-getPrefetchedData(components, getLocals).then(render());
+trigger('fetch', components, getLocals).then(render);
 ```
 
 ## Example Usage with React Router and Redux
@@ -72,7 +100,7 @@ In order to dispatch actions from within your decorators, you'll want to pass in
 For example:
 
 ```js
-import { getPrefetchedData } from 'react-fetcher';
+import { trigger } from 'redial';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import createMemoryHistory from 'history/lib/createMemoryHistory';
@@ -113,7 +141,7 @@ export default path => new Promise((resolve, reject) => {
     };
 
     // Wait for async actions to complete, then render:
-    getPrefetchedData(components, locals)
+    trigger('fetch', components, locals)
       .then(() => {
         const data = store.getState();
         const html = renderToString(
