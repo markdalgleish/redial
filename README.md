@@ -116,9 +116,11 @@ import routes from './routes';
 
 // Render the app server-side for a given path:
 export default path => new Promise((resolve, reject) => {
-  // Set up Redux:
-  const createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
-  const store = createStoreWithMiddleware(reducer);
+  // Set up Redux (note: this API requires redux@>=3.1.0):
+  const store = createStore(
+    reducer,
+    applyMiddleware(thunk)
+  );
   const { dispatch } = store;
 
   // Set up history for router:
