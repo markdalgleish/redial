@@ -35,9 +35,18 @@ describe('Given a series of components have been decorated with hooks', () => {
     let resolveSpy, rejectSpy;
 
     beforeEach(() => {
+      const componentsWithFalsyValues = [
+        undefined,
+        hook_a.component,
+        null,
+        hook_b.component,
+        false
+      ];
+
       resolveSpy = spy();
       rejectSpy = spy();
-      trigger('foobar', [ hook_a.component, hook_b.component ], { some: 'data' })
+
+      trigger('foobar', componentsWithFalsyValues, { some: 'data' })
         .then(resolveSpy, rejectSpy);
     });
 
@@ -138,6 +147,25 @@ describe('Given a series of components have been decorated with hooks', () => {
       rejectSpy = spy();
 
       return trigger('unhandled', hook_a.component, { some: 'data' })
+        .then(resolveSpy, rejectSpy);
+    });
+
+    it('Then the lifecycle event promise should also be resolved', () => {
+      assert.equal(resolveSpy.callCount, 1);
+      assert.equal(rejectSpy.callCount, 0);
+    });
+
+  });
+
+  describe('When a lifecycle event is triggered for a falsy value', () => {
+
+    let resolveSpy, rejectSpy;
+
+    beforeEach(() => {
+      resolveSpy = spy();
+      rejectSpy = spy();
+
+      return trigger('unhandled', null, { some: 'data' })
         .then(resolveSpy, rejectSpy);
     });
 
