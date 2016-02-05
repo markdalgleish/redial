@@ -1,6 +1,9 @@
 export default (name, components, locals) => {
   const promises = (Array.isArray(components) ? components : [components])
 
+    // Filter out routes without defined components
+    .filter(component => !!component)
+
     // Get component lifecycle handler functions
     .map(component => ({ component, handlers: component.__redial_handlers__ }))
 
