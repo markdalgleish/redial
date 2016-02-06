@@ -190,6 +190,7 @@ export default container => {
   // Set up history for router and listen for changes:
   const history = useQueries(createBrowserHistory)();
   history.listen(location => {
+    // Match routes based on location object:
     match({ routes, location }, (routerError, redirectLocation, renderProps) => {
       // Get array of route components:
       const components = renderProps.routes.map(route => route.component);
@@ -204,12 +205,12 @@ export default container => {
         dispatch
       };
 
-      // Don't fetch data on first render, server has already done the work:
+      // Don't fetch data for initial route, server has already done the work:
       if (window.INITIAL_STATE) {
         // Delete global data so that subsequent data fetches can occur:
         delete window.INITIAL_STATE;
       } else {
-        // Fetch mandatory data dependencies:
+        // Fetch mandatory data dependencies for 2nd route change onwards:
         trigger('fetch', components, locals);
       }
 
