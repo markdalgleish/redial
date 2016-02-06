@@ -91,16 +91,17 @@ const getLocals = component => ({
 trigger('fetch', components, getLocals).then(render);
 ```
 
-## Example Usage with React Router and Redux
+## Example usage with React Router and Redux
 
 When [server rendering with React Router](https://github.com/rackt/react-router/blob/master/docs/guides/advanced/ServerRendering.md) (or using the same technique to render on the client), the `renderProps` object provided to the `match` callback has an array of routes, each of which has a component attached. You're also likely to want to pass some information from the router to your decorator functions.
 
 In order to dispatch actions from within your decorators, you'll want to pass in a reference to your store's `dispatch` function. This works especially well with [redux-thunk](https://github.com/gaearon/redux-thunk) to ensure your async actions return promises.
 
-For example:
+### Example server usage
 
 ```js
 import { trigger } from 'redial';
+
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import createMemoryHistory from 'history/lib/createMemoryHistory';
@@ -117,10 +118,7 @@ import routes from './routes';
 // Render the app server-side for a given path:
 export default path => new Promise((resolve, reject) => {
   // Set up Redux (note: this API requires redux@>=3.1.0):
-  const store = createStore(
-    reducer,
-    applyMiddleware(thunk)
-  );
+  const store = createStore(reducer, applyMiddleware(thunk));
   const { dispatch } = store;
 
   // Set up history for router:
@@ -132,17 +130,17 @@ export default path => new Promise((resolve, reject) => {
     // Get array of route components:
     const components = renderProps.routes.map(route => route.component);
 
-    // Define locals to be provided to all fetcher functions:
+    // Define locals to be provided to all lifecycle hooks:
     const locals = {
       path: renderProps.location.pathname,
       query: renderProps.location.query,
       params: renderProps.params,
 
-      // Allow fetcher functions to dispatch Redux actions:
+      // Allow lifecycle hooks to dispatch Redux actions:
       dispatch
     };
 
-    // Wait for async actions to complete, then render:
+    // Wait for async data fetching to complete, then render:
     trigger('fetch', components, locals)
       .then(() => {
         const data = store.getState();
@@ -157,6 +155,78 @@ export default path => new Promise((resolve, reject) => {
       .catch(reject);
   });
 });
+```
+
+### Example client usage
+
+```js
+import { trigger } from 'redial';
+
+import React from 'react';
+import { render } from 'react-dom';
+import createBrowserHistory from 'history/lib/createBrowserHistory';
+import useQueries from 'history/lib/useQueries';
+import { Router, match } from 'react-router';
+import { createStore, applyMiddleware } from 'redux';
+import { Provider } from 'react-redux';
+import thunk from 'redux-thunk';
+
+// Your app's reducer and routes:
+import reducer from './reducer';
+import routes from './routes';
+
+// Render the app client-side to a given container element:
+export default container => {
+  // Your server rendered response needs to expose the state of the store, e.g.
+  // <script>
+  //   window.INITIAL_STATE = <%- JSON.stringify(store.getState())%>
+  // </script>
+  const initialState = window.INITIAL_STATE;
+
+  // Set up Redux (note: this API requires redux@>=3.1.0):
+  const store = createStore(reducer, initialState, applyMiddleware(thunk));
+  const { dispatch } = store;
+
+  // Set up history for router and listen for changes:
+  const history = useQueries(createBrowserHistory)();
+  history.listen(location => {
+    match({ routes, location }, (routerError, redirectLocation, renderProps) => {
+      // Get array of route components:
+      const components = renderProps.routes.map(route => route.component);
+
+      // Define locals to be provided to all lifecycle hooks:
+      const locals = {
+        path: renderProps.location.pathname,
+        query: renderProps.location.query,
+        params: renderProps.params,
+
+        // Allow lifecycle hooks to dispatch Redux actions:
+        dispatch
+      };
+
+      // Don't fetch data on first render, server has already done the work:
+      if (window.INITIAL_STATE) {
+        // Delete global data so that subsequent data fetches can occur:
+        delete window.INITIAL_STATE;
+      } else {
+        // Fetch mandatory data dependencies:
+        trigger('fetch', components, locals);
+      }
+
+      // Fetch deferred, client-only data dependencies
+      trigger('defer', components, locals)
+        // Finally, trigger 'done' lifecycle hooks:
+        .then(() => trigger('done', components, locals));
+    });
+  });
+
+  // Render app with Redux and router context to container element:
+  render((
+    <Provider store={store}>
+      <Router history={history} routes={routes} />
+    </Provider>
+  ), container);
+};
 ```
 
 ## Related projects
