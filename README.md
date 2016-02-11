@@ -189,7 +189,8 @@ export default container => {
 
   // Set up history for router and listen for changes:
   const history = useQueries(createBrowserHistory)();
-  history.listenBefore(location, callback => {
+  
+  const callProvidedHooks = (location, callback) => {
     // Match routes based on location object:
     match({ routes, location }, (routerError, redirectLocation, renderProps) => {
       // Get array of route components:
@@ -208,17 +209,22 @@ export default container => {
       // Don't fetch data for initial route, server has already done the work:
       const invoke = window.INITIAL_STATE ? Promise.resolve.bind(Promise) : trigger;
       
-      if (window.INITIAL_STATE) {
-        // Delete global data so that subsequent data fetches can occur:
-        delete window.INITIAL_STATE;
-      }
-      
       invoke('fetch', components, locals) // Fetch mandatory data dependencies for 2nd route change onwards
       .then(() => trigger('defer', components, locals)) // Fetch deferred, client-only data dependencies
       .then(() => trigger('done', components, locals)) // Finally, trigger 'done' lifecycle hooks
       .then(callback);
     });
+  };
+  
+  // Handle initial rendering
+  history.listen((location) => {
+    if (window.INITIAL_STATE) {
+      // Delete global data so that subsequent data fetches can occur:
+      callProvidedHooks(location, () => delete window.INITIAL_STATE);
+    }
   });
+  // Handle following rendering
+  history.listenBefore(callProvidedHooks);
 
   // Render app with Redux and router context to container element:
   render((
