@@ -93,7 +93,7 @@ trigger('fetch', components, getLocals).then(render);
 
 ## Example usage with React Router and Redux
 
-When [server rendering with React Router](https://github.com/rackt/react-router/blob/master/docs/guides/advanced/ServerRendering.md) (or using the same technique to render on the client), the `renderProps` object provided to the `match` callback has an array of routes, each of which has a component attached. You're also likely to want to pass some information from the router to your decorator functions.
+When [server rendering with React Router](https://github.com/rackt/react-router/blob/master/docs/guides/ServerRendering.md) (or using the same technique to render on the client), the `renderProps` object provided to the `match` callback has an array of routes, each of which has a component attached. You're also likely to want to pass some information from the router to your decorator functions.
 
 In order to dispatch actions from within your decorators, you'll want to pass in a reference to your store's `dispatch` function. This works especially well with [redux-thunk](https://github.com/gaearon/redux-thunk) to ensure your async actions return promises.
 
@@ -104,9 +104,7 @@ import { trigger } from 'redial';
 
 import React from 'react';
 import { renderToString } from 'react-dom/server';
-import createMemoryHistory from 'history/lib/createMemoryHistory';
-import useQueries from 'history/lib/useQueries';
-import { RoutingContext, match } from 'react-router';
+import { RouterContext, createMemoryHistory, match } from 'react-router';
 import { createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import thunk from 'redux-thunk';
@@ -119,16 +117,15 @@ import routes from './routes';
 export default path => new Promise((resolve, reject) => {
   // Set up Redux (note: this API requires redux@>=3.1.0):
   const store = createStore(reducer, applyMiddleware(thunk));
-  const { dispatch } = store;
+  const { dispatch, getState } = store;
 
   // Set up history for router:
-  const history = useQueries(createMemoryHistory)();
-  const location = history.createLocation(path);
+  const history = createMemoryHistory(path);
 
-  // Match routes based on location object:
-  match({ routes, location }, (routerError, redirectLocation, renderProps) => {
-    // Get array of route components:
-    const components = renderProps.routes.map(route => route.component);
+  // Match routes based on history object:
+  match({ routes, history }, (error, redirectLocation, renderProps) => {
+    // Get array of route handler components:
+    const { components } = renderProps;
 
     // Define locals to be provided to all lifecycle hooks:
     const locals = {
@@ -143,14 +140,14 @@ export default path => new Promise((resolve, reject) => {
     // Wait for async data fetching to complete, then render:
     trigger('fetch', components, locals)
       .then(() => {
-        const data = store.getState();
+        const state = getState();
         const html = renderToString(
           <Provider store={store}>
-            <RoutingContext {...renderProps} />
+            <RouterContext {...renderProps} />
           </Provider>
         );
 
-        resolve({ data, html });
+        resolve({ html, state });
       })
       .catch(reject);
   });
@@ -164,9 +161,7 @@ import { trigger } from 'redial';
 
 import React from 'react';
 import { render } from 'react-dom';
-import createBrowserHistory from 'history/lib/createBrowserHistory';
-import useQueries from 'history/lib/useQueries';
-import { Router, match } from 'react-router';
+import { Router, RouterContext, browserHistory } from 'react-router';
 import { createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import thunk from 'redux-thunk';
@@ -179,7 +174,7 @@ import routes from './routes';
 export default container => {
   // Your server rendered response needs to expose the state of the store, e.g.
   // <script>
-  //   window.INITIAL_STATE = <%- JSON.stringify(store.getState())%>
+  //   window.INITIAL_STATE = <%- JSON.stringify(state)%>
   // </script>
   const initialState = window.INITIAL_STATE;
 
@@ -187,13 +182,12 @@ export default container => {
   const store = createStore(reducer, initialState, applyMiddleware(thunk));
   const { dispatch } = store;
 
-  // Set up history for router and listen for changes:
-  const history = useQueries(createBrowserHistory)();
-  history.listen(location => {
+  // Listen for route changes on the browser history instance:
+  browserHistory.listen(location => {
     // Match routes based on location object:
-    match({ routes, location }, (routerError, redirectLocation, renderProps) => {
-      // Get array of route components:
-      const components = renderProps.routes.map(route => route.component);
+    match({ routes, location }, (error, redirectLocation, renderProps) => {
+      // Get array of route handler components:
+      const { components } = renderProps;
 
       // Define locals to be provided to all lifecycle hooks:
       const locals = {
@@ -207,24 +201,22 @@ export default container => {
 
       // Don't fetch data for initial route, server has already done the work:
       if (window.INITIAL_STATE) {
-        // Delete global data so that subsequent data fetches can occur:
+        // Delete initial data so that subsequent data fetches can occur:
         delete window.INITIAL_STATE;
       } else {
         // Fetch mandatory data dependencies for 2nd route change onwards:
         trigger('fetch', components, locals);
       }
 
-      // Fetch deferred, client-only data dependencies
-      trigger('defer', components, locals)
-        // Finally, trigger 'done' lifecycle hooks:
-        .then(() => trigger('done', components, locals));
+      // Fetch deferred, client-only data dependencies:
+      trigger('defer', components, locals);
     });
   });
 
   // Render app with Redux and router context to container element:
   render((
     <Provider store={store}>
-      <Router history={history} routes={routes} />
+      <Router history={browserHistory} routes={routes} />
     </Provider>
   ), container);
 };
