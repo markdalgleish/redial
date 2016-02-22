@@ -222,6 +222,10 @@ export default container => {
 };
 ```
 
+## Boilerplates using redial
+
+- [React Production Starter](https://github.com/jaredpalmer/react-production-starter) by [@jaredpalmer](https://twitter.com/jaredpalmer)
+
 ## Related projects
 
 - [React Resolver](https://github.com/ericclemmons/react-resolver) by [@ericclemmons](https://twitter.com/ericclemmons)
