@@ -1,4 +1,6 @@
-export default handlers => ComposedComponent => {
-  ComposedComponent.__redial_handlers__ = handlers;
+import propName from './propName';
+
+export default hooks => ComposedComponent => {
+  ComposedComponent[propName] = hooks;
   return ComposedComponent;
 };

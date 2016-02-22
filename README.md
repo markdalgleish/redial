@@ -79,7 +79,7 @@ trigger('fetch', components, locals).then(render);
 
 ### Dynamic locals
 
-If you need to calculate different locals for each lifecycle hook, you can provide a function instead of an object. This function is then executed once per decorator, with a static reference to the component provided as an argument.
+If you need to calculate different locals for each lifecycle hook, you can provide a function instead of an object. This function is then executed once per lifecycle hook, with a static reference to the component provided as an argument.
 
 For example, this would allow you to calculate whether a component is being rendered for the first time and pass the result in via the locals object:
 
@@ -93,9 +93,9 @@ trigger('fetch', components, getLocals).then(render);
 
 ## Example usage with React Router and Redux
 
-When [server rendering with React Router](https://github.com/rackt/react-router/blob/master/docs/guides/ServerRendering.md) (or using the same technique to render on the client), the `renderProps` object provided to the `match` callback has an array of routes, each of which has a component attached. You're also likely to want to pass some information from the router to your decorator functions.
+When [server rendering with React Router](https://github.com/rackt/react-router/blob/master/docs/guides/ServerRendering.md) (or using the same technique to render on the client), the `renderProps` object provided to the `match` callback has an array of routes, each of which has a component attached. You're also likely to want to pass some information from the router to your lifecycle hooks.
 
-In order to dispatch actions from within your decorators, you'll want to pass in a reference to your store's `dispatch` function. This works especially well with [redux-thunk](https://github.com/gaearon/redux-thunk) to ensure your async actions return promises.
+In order to dispatch actions from within your hooks, you'll want to pass in a reference to your store's `dispatch` function. This works especially well with [redux-thunk](https://github.com/gaearon/redux-thunk) to ensure your async actions return promises.
 
 ### Example server usage
 

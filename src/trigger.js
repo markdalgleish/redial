@@ -1,26 +1,28 @@
+import propName from './propName';
+
 export default (name, components, locals) => {
   const promises = (Array.isArray(components) ? components : [components])
 
     // Filter out falsy components
     .filter(component => component)
 
-    // Get component lifecycle handler functions
-    .map(component => ({ component, handlers: component.__redial_handlers__ }))
+    // Get component lifecycle hooks
+    .map(component => ({ component, hooks: component[propName] }))
 
     // Filter out components that haven't been decorated
-    .filter(({ handlers }) => handlers)
+    .filter(({ hooks }) => hooks)
 
-    // Calculate locals if required, execute handlers and store promises
-    .map(({ component, handlers }) => {
-      const handler = handlers[name];
+    // Calculate locals if required, execute hooks and store promises
+    .map(({ component, hooks }) => {
+      const hook = hooks[name];
 
-      if (typeof handler !== 'function') {
+      if (typeof hook !== 'function') {
         return;
       }
 
       return typeof locals === 'function' ?
-        handler(locals(component)) :
-        handler(locals)
+        hook(locals(component)) :
+        hook(locals)
     });
 
   return Promise.all(promises);
