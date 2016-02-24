@@ -174,7 +174,7 @@ import routes from './routes';
 export default container => {
   // Your server rendered response needs to expose the state of the store, e.g.
   // <script>
-  //   window.INITIAL_STATE = <%- JSON.stringify(state)%>
+  //   window.INITIAL_STATE = <%- require('serialize-javascript')(state)%>
   // </script>
   const initialState = window.INITIAL_STATE;
 
