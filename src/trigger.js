@@ -1,16 +1,7 @@
-import propName from './propName';
+import getHookedComponents from './getHookedComponents'
 
 export default (name, components, locals) => {
-  const promises = (Array.isArray(components) ? components : [components])
-
-    // Filter out falsy components
-    .filter(component => component)
-
-    // Get component lifecycle hooks
-    .map(component => ({ component, hooks: component[propName] }))
-
-    // Filter out components that haven't been decorated
-    .filter(({ hooks }) => hooks)
+  const promises = getHookedComponents(components)
 
     // Calculate locals if required, execute hooks and store promises
     .map(({ component, hooks }) => {
