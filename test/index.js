@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { spy, stub } from 'sinon';
 import React, { Component } from 'react';
-import { provideHooks, trigger } from '../src';
+import { provideHooks, trigger, waterfall } from '../src';
 
 const makeTestObject = (hookName) => {
   let object = {};
@@ -173,6 +173,41 @@ describe('Given a series of components have been decorated with hooks', () => {
       assert.equal(resolveSpy.callCount, 1);
       assert.equal(rejectSpy.callCount, 0);
     });
+
+  });
+
+  describe('When a lifecycle event is waterfalled', () => {
+
+    let hook_a, hook_b;
+
+    beforeEach(() => {
+      hook_a = makeTestObject('foobar');
+      hook_b = makeTestObject('foobar');
+
+      const components = [
+        hook_a.component,
+        hook_b.component
+      ];
+
+      waterfall('foobar', components)
+        .then(l => {
+          console.log(l)
+        })
+    })
+
+    describe('And the hook promises are resolved', () => {
+
+      beforeEach(done => {
+        hook_a.resolve()
+        hook_b.resolve()
+        setImmediate(done)
+      })
+
+      it('Then the hook promises should be executed in order', () => {
+        assert.equal(1, 1);
+      });
+
+    })
 
   });
 

@@ -222,6 +222,15 @@ export default container => {
 };
 ```
 
+### Alternative way of fetching
+
+Launching all the promises at the same time is great, but can have drawbacks
+(e.g: fetching an item list before fetching the user).
+
+Instead of using `trigger` to launch the hooks fetching, you can use `waterfall`.
+It will chain the promises, (outside components first), so it can be usefull
+to have some sort of "dependencies" between your promises.
+
 ## Boilerplates using redial
 
 - [React Production Starter](https://github.com/jaredpalmer/react-production-starter) by [@jaredpalmer](https://twitter.com/jaredpalmer)
