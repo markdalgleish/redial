@@ -225,6 +225,7 @@ export default container => {
 ## Boilerplates using redial
 
 - [React Production Starter](https://github.com/jaredpalmer/react-production-starter) by [@jaredpalmer](https://twitter.com/jaredpalmer)
+- [Redux universal boilerplate](https://github.com/ufocoder/redux-universal-boilerplate) by [@xufocoder](https://twitter.com/xufocoder)
 
 ## Related projects
 
