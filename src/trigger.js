@@ -20,9 +20,13 @@ export default (name, components, locals) => {
         return;
       }
 
-      return typeof locals === 'function' ?
-        hook(locals(component)) :
-        hook(locals)
+      try {
+        return typeof locals === 'function' ?
+          hook(locals(component)) :
+          hook(locals);
+      } catch (err) {
+        return Promise.reject(err);
+      }
     });
 
   return Promise.all(promises);
