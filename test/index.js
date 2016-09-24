@@ -12,7 +12,12 @@ const makeTestObject = (hookName) => {
   });
   object.stub = stub().returns(prefetchPromise);
 
-  @provideHooks({ [hookName]: object.stub })
+  @provideHooks({
+    [hookName]: object.stub,
+    throwError: () => {
+      throw new Error('OHNOES');
+    }
+  })
   class TestComponent extends Component {
     render() { return <div />; }
   }
@@ -172,6 +177,26 @@ describe('Given a series of components have been decorated with hooks', () => {
     it('Then the lifecycle event promise should also be resolved', () => {
       assert.equal(resolveSpy.callCount, 1);
       assert.equal(rejectSpy.callCount, 0);
+    });
+
+  });
+
+  describe('When a lifecycle hook throws an error', () => {
+
+    let resolveSpy, rejectSpy;
+
+    beforeEach(() => {
+      resolveSpy = spy();
+      rejectSpy = spy();
+
+      return trigger('throwError', [ hook_a.component, hook_b.component ], {})
+        .then(resolveSpy, rejectSpy);
+    });
+
+    it('Then the lifecycle event promise should be rejected', () => {
+      assert.equal(resolveSpy.callCount, 0);
+      assert.equal(rejectSpy.callCount, 1);
+      assert.equal(rejectSpy.getCall(0).args[0].message, 'OHNOES');
     });
 
   });
