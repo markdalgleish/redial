@@ -28,11 +28,13 @@ const makeTestObject = (hookName) => {
 
 describe('Given a series of components have been decorated with hooks', () => {
 
-  let hook_a, hook_b;
+  let hook_a, hook_b, hook_c, hook_d;
 
   beforeEach(() => {
     hook_a = makeTestObject('foobar');
     hook_b = makeTestObject('foobar');
+    hook_c = makeTestObject('foobar');
+    hook_d = makeTestObject('foobar');
   });
 
   describe('When a handled lifecycle event is triggered', () => {
@@ -40,24 +42,27 @@ describe('Given a series of components have been decorated with hooks', () => {
     let resolveSpy, rejectSpy;
 
     beforeEach(() => {
-      const componentsWithFalsyValues = [
+      const componentsWithFalsyAndNamedValues = [
         undefined,
         hook_a.component,
         null,
         hook_b.component,
-        false
+        false,
+        { hook_c: hook_c.component, hook_d: hook_d.component }
       ];
 
       resolveSpy = spy();
       rejectSpy = spy();
 
-      trigger('foobar', componentsWithFalsyValues, { some: 'data' })
+      trigger('foobar', componentsWithFalsyAndNamedValues, { some: 'data' })
         .then(resolveSpy, rejectSpy);
     });
 
     it('Then the hooks should have locals passed to them', () => {
       assert.deepEqual(hook_a.stub.getCall(0).args[0], { some: 'data' });
       assert.deepEqual(hook_b.stub.getCall(0).args[0], { some: 'data' });
+      assert.deepEqual(hook_c.stub.getCall(0).args[0], { some: 'data' });
+      assert.deepEqual(hook_d.stub.getCall(0).args[0], { some: 'data' });
     });
 
     describe('And the hook promises are resolved', () => {
@@ -65,6 +70,8 @@ describe('Given a series of components have been decorated with hooks', () => {
       beforeEach(done => {
         hook_a.resolve();
         hook_b.resolve();
+        hook_c.resolve();
+        hook_d.resolve();
         setImmediate(done);
       });
 
@@ -80,6 +87,8 @@ describe('Given a series of components have been decorated with hooks', () => {
       beforeEach(done => {
         hook_a.resolve();
         hook_b.reject();
+        hook_c.resolve();
+        hook_d.reject();
         setImmediate(done);
       });
 

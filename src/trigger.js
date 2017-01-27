@@ -3,6 +3,16 @@ import propName from './propName';
 export default (name, components, locals) => {
   const promises = (Array.isArray(components) ? components : [components])
 
+    // Handle multiple named components
+    .reduce((p, c) => {
+      if (typeof c === 'object') {
+        for (let k in c) p.push(c[k]);
+      } else {
+        p.push(c);
+      }
+      return p;
+    }, [])
+
     // Filter out falsy components
     .filter(component => component)
 
