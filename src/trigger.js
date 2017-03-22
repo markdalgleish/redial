@@ -1,33 +1,40 @@
 import propName from './propName';
 
-export default (name, components, locals) => {
-  const promises = (Array.isArray(components) ? components : [components])
+const getPromises = (name, components, locals) => {
 
-    // Filter out falsy components
+  const promises = [];
+
+  (Array.isArray(components) ? components : [components])
     .filter(component => component)
 
-    // Get component lifecycle hooks
-    .map(component => ({ component, hooks: component[propName] }))
+    .map(component => ({component, hooks: component[propName]}))
 
-    // Filter out components that haven't been decorated
-    .filter(({ hooks }) => hooks)
+    .filter(({hooks}) => hooks)
 
-    // Calculate locals if required, execute hooks and store promises
-    .map(({ component, hooks }) => {
-      const hook = hooks[name];
-
-      if (typeof hook !== 'function') {
-        return;
+    .forEach(({component, hooks}) => {
+      const hook = hooks[name]
+      const children = hooks['components']
+      if (typeof hook === 'function') {
+        try {
+          promises.push(typeof locals === 'function' ?
+            hook(locals(component)) :
+            hook(locals))
+        } catch (err) {
+          promises.push(Promise.reject(err))
+        }
       }
-
-      try {
-        return typeof locals === 'function' ?
-          hook(locals(component)) :
-          hook(locals);
-      } catch (err) {
-        return Promise.reject(err);
+      if (typeof children !== 'undefined' && children) {
+        getPromises(name, (Array.isArray(children) ? children : [children]), locals).forEach(promise => {
+          promises.push(promise)
+        })
       }
     });
 
-  return Promise.all(promises);
-};
+  return promises;
+}
+
+const trigger = (name, components, locals) => {
+  return Promise.all(getPromises(name, components, locals));
+}
+
+export default trigger
