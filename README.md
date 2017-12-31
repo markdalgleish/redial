@@ -235,6 +235,10 @@ export default container => {
 - [GroundControl](https://github.com/raisemarketplace/ground-control) by [@nickdreckshage](https://twitter.com/nickdreckshage)
 - [React Async](https://github.com/andreypopp/react-async) by [@andreypopp](https://twitter.com/andreypopp)
 
+## Translation
+
+- [Chinese](https://github.com/AnHongpeng/redial-in-chinese)
+
 ## License
 
 [MIT License](http://markdalgleish.mit-license.org/)
