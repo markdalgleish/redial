@@ -26,9 +26,14 @@ export default (name, components, locals) => {
             ? hook(locals(component))
             : hook(locals);
 
-        if (trigger && !trigger.then || !tigger) {
+        const isNoPromise = (trigger && !trigger.then) || !tigger;
+
+        const isDev =
+          process && process.env && process.env.NODE_ENV === 'development';
+
+        if (isNoPromise && isDev) {
           console.warn(
-            'fetch does not return a promise. In this case redial execute then immediately and does not wait for async operations. Please check return (also implicit) of the defined fetch function.'
+            'fetch does not return a promise. In this case redial execute "then" immediately and does not wait for async operations. Please check return (also implicit) of the defined fetch function.'
           );
         }
 
