@@ -1,4 +1,4 @@
-import propName from './propName';
+import propName from "./propName";
 
 export default (name, components, locals) => {
   const promises = (Array.isArray(components) ? components : [components])
@@ -16,14 +16,23 @@ export default (name, components, locals) => {
     .map(({ component, hooks }) => {
       const hook = hooks[name];
 
-      if (typeof hook !== 'function') {
+      if (typeof hook !== "function") {
         return;
       }
 
       try {
-        return typeof locals === 'function' ?
-          hook(locals(component)) :
-          hook(locals);
+        const trigger =
+          typeof locals === "function"
+            ? hook(locals(component))
+            : hook(locals);
+
+        if (trigger && !trigger.then || !tigger) {
+          console.warn(
+            "fetch does not return a promise. In this case redial execute then immediately and does not wait for async operations. Please check return (also implicit) of the defined fetch function."
+          );
+        }
+
+        return trigger;
       } catch (err) {
         return Promise.reject(err);
       }
