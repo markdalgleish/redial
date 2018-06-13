@@ -21,9 +21,23 @@ export default (name, components, locals) => {
       }
 
       try {
-        return typeof locals === 'function' ?
-          hook(locals(component)) :
-          hook(locals);
+        const promise =
+          typeof locals === 'function'
+            ? hook(locals(component))
+            : hook(locals);
+
+        const isNoPromise = (promise && !promise.then) || !promise;
+
+        const isDev =
+          process && process.env && process.env.NODE_ENV === 'development';
+
+        if (isNoPromise && isDev) {
+          console.warn(
+            'fetch does not return a promise. In this case redial execute "then" immediately and does not wait for async operations. Please check return (also implicit) of the defined fetch function.'
+          );
+        }
+
+        return promise;
       } catch (err) {
         return Promise.reject(err);
       }
