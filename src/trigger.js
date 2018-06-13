@@ -21,12 +21,12 @@ export default (name, components, locals) => {
       }
 
       try {
-        const trigger =
+        const promise =
           typeof locals === 'function'
             ? hook(locals(component))
             : hook(locals);
 
-        const isNoPromise = (trigger && !trigger.then) || !tigger;
+        const isNoPromise = (promise && !promise.then) || !promise;
 
         const isDev =
           process && process.env && process.env.NODE_ENV === 'development';
@@ -37,7 +37,7 @@ export default (name, components, locals) => {
           );
         }
 
-        return trigger;
+        return promise;
       } catch (err) {
         return Promise.reject(err);
       }
